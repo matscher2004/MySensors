@@ -53,8 +53,7 @@ byte debounceArrayIndex = 0;
 void setup()  
 {
   // init debouncer array
-  for(int i = 0; i < DEBOUNCEARRAY_COUNT; i++)
-  {
+  for(int i = 0; i < DEBOUNCEARRAY_COUNT; i++) {
     debounceArray[i] = 255;
   }
   
@@ -138,8 +137,7 @@ void loop()
 
 void incomingMessage(const MyMessage &message) {
   if (message.type==V_VAR1) {
-    unsigned long gwPulseCount=message.getULong();
-    pulseCount += gwPulseCount;
+    pulseCount = oldPulseCount = message.getLong();
     Serial.print("Received last pulse count from gw:");
     Serial.println(pulseCount);
     pcReceived = true;

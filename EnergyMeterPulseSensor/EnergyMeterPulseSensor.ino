@@ -58,11 +58,11 @@ double oldKwh;
 unsigned long lastSend;
 
 #define DEBOUNCERARRAYENERGY 15
-int debounceArray[DEBOUNCERARRAYENERGY] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+int debounceArray[DEBOUNCERARRAYENERGY];
 byte debounceArrayIndex = 0;
 
-#define DEBOUNCERARRAYGAS 10
-int debounceGasArray[DEBOUNCERARRAYGAS] = {0,0,0,0,0,0,0,0,0,0};
+#define DEBOUNCERARRAYGAS 20
+int debounceGasArray[DEBOUNCERARRAYGAS];
 byte debounceGasArrayIndex = 0;
 
 MyMessage wattMsg(CHILD_ID,V_WATT);
@@ -75,6 +75,16 @@ MyMessage gasValueMsg(CHILD_ID_GAS,V_VAR1);
 
 void setup()  
 {
+  // init debouncer array ENERGY
+  for(int i = 0; i < DEBOUNCERARRAYENERGY; i++) {
+    debounceArray[i] = 999;
+  }
+  
+  // init debouncer array GAS
+  for(int i = 0; i < DEBOUNCERARRAYGAS; i++) {
+    debounceGasArray[i] = 999;
+  }
+  
   gw.begin(incomingMessage);
 
   // Send the sketch version information to the gateway and Controller
@@ -84,7 +94,7 @@ void setup()
   gw.present(CHILD_ID, S_POWER);
 
   // register gas meter
-  gw.present(CHILD_ID_GAS, S_GAS);
+  gw.present(CHILD_ID_GAS, S_POWER);
 
   pulseCountGas = oldPulseCountGas = 0;
 
@@ -150,7 +160,7 @@ void loop()
     }
     
     // No Pulse count received in 2min 
-    if(now - lastPulseGas > 120000){
+    if(now - lastPulseGas > 120000) {
       flow = 0;
     }
     
@@ -217,8 +227,7 @@ void CheckEnergyAnalogValueToDetect() {
   int debounceSum = 0;
 
   debounceArray[debounceArrayIndex] = val;
-  for(int i = 0; i < DEBOUNCERARRAYENERGY; i++)
-  {
+  for(int i = 0; i < DEBOUNCERARRAYENERGY; i++) {
     debounceSum += debounceArray[i];
   }
 
@@ -272,8 +281,7 @@ void CheckGasAnalogValueToDetect() {
   int debounceSum = 0;
 
   debounceGasArray[debounceGasArrayIndex] = value;
-  for(int i = 0; i < DEBOUNCERARRAYGAS; i++)
-  {
+  for(int i = 0; i < DEBOUNCERARRAYGAS; i++) {
     debounceSum += debounceGasArray[i];
   }
 
@@ -285,26 +293,24 @@ void CheckGasAnalogValueToDetect() {
   // average of DEBOUNCERARRAYGAS
   value = debounceSum / DEBOUNCERARRAYGAS;
 
-  if (value > 145) {
+  // 145 old value
+  if (value > 200) {
     nextState = false;
   } else if (value == 0) {
     nextState = true;
   }
     
-  if(nextState != triggerStateGas)
-  {
+  if(nextState != triggerStateGas) {
     triggerStateGas = nextState;
 
     if(triggerStateGas) {
-
-      if (interval!=0)
-      {
+      if (interval!=0) {
         lastPulseGas = millis();
-        if (interval<500000L) {
-          // Sometimes we get interrupt on RISING,  500000 = 0.5sek debounce ( max 120 l/min)
+        if (interval<1000000L) {
+          // Sometimes we get interrupt on RISING,  1000000 = 1sek debounce ( max 60 l/min)
           return;   
         }
-        flow = (60000000.0 /interval) / ppl;
+        flow = (60000000.0 / interval) / ppl;
       }
       lastBlinkGas = newBlink;
       
