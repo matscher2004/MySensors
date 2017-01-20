@@ -207,7 +207,7 @@ void incomingMessage(const MyMessage &message) {
 
   } else if (message.type == V_VAR1 && message.sensor == CHILD_ID_GAS) {  // gas meter
 
-    pulseCountGas += message.getLong();
+    pulseCountGas = oldPulseCountGas = message.getLong();
     Serial.print("Received last gas pulse count from gw: ");
     Serial.println(pulseCountGas);
     pcGasReceived = true;
