@@ -14,7 +14,7 @@
 
 #define SENSOR_ANALOG_PIN_WATER 0               // analog pin for the sensor -> for water meter
 
-#define PULSE_FACTOR 1000                       // Nummber of blinks per m3 of your meter (One rotation/liter)
+#define PULSE_FACTOR 2000                       // Nummber of blinks per m3 of your meter (One rotation/liter)
 
 #define SLEEP_MODE false                        // flowvalue can only be reported when sleep mode is false.
 
@@ -46,12 +46,14 @@ double oldvolume =0;
 unsigned long lastSend =0;
 unsigned long lastPulse =0;
 
-#define DEBOUNCEARRAY_COUNT 20
+#define DEBOUNCEARRAY_COUNT 200
 int debounceArray[DEBOUNCEARRAY_COUNT];
 byte debounceArrayIndex = 0;
 
 void setup()  
 {
+  digitalWrite(SENSOR_ANALOG_PIN_WATER, INPUT_PULLUP); // pullUp
+  
   // init debouncer array
   for(int i = 0; i < DEBOUNCEARRAY_COUNT; i++) {
     debounceArray[i] = 255;
@@ -73,13 +75,12 @@ void setup()
   lastSend = lastPulse = millis();
 }
 
-
 void loop()     
 { 
   gw.process();
   unsigned long currentTime = millis();
 
-    // Only send values at a maximum frequency or woken up from sleep
+  // Only send values at a maximum frequency or woken up from sleep
   if (SLEEP_MODE || (currentTime - lastSend > SEND_FREQUENCY))
   {
     lastSend=currentTime;
@@ -136,7 +137,7 @@ void loop()
 }
 
 void incomingMessage(const MyMessage &message) {
-  if (message.type==V_VAR1) {
+  if (message.type == V_VAR1) {
     pulseCount = oldPulseCount = message.getLong();
     Serial.print("Received last pulse count from gw:");
     Serial.println(pulseCount);
@@ -183,8 +184,8 @@ void CheckSensor()
 
     if(triggerState) {
       if (interval!=0) {
-        if (intervalReal<1000000L) {
-          // Sometimes we get interrupt on RISING,  1000000 = 1 sek debounce ( max 60 l/min)
+        if (intervalReal < 1100000L) {
+          // Sometimes we get interrupt on RISING,  1100000 = 1,1 sek debounce ( max 60 l/min)
           lastBlinkReal = newBlink;
           return;   
         }
