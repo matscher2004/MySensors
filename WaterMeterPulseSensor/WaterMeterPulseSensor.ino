@@ -14,7 +14,7 @@
 
 #define SENSOR_ANALOG_PIN_WATER 0               // analog pin for the sensor -> for water meter
 
-#define PULSE_FACTOR 2000                       // Nummber of blinks per m3 of your meter (One rotation/liter)
+#define PULSE_FACTOR 1000                       // Nummber of blinks per m3 of your meter (One rotation/liter)
 
 #define SLEEP_MODE false                        // flowvalue can only be reported when sleep mode is false.
 
@@ -41,7 +41,7 @@ boolean pcReceived = false;
 unsigned long oldPulseCount = 0;
 unsigned long newBlink = 0;   
 double oldflow = 0;
-double volume =0;                     
+                  
 double oldvolume =0;
 unsigned long lastSend =0;
 unsigned long lastPulse =0;
@@ -53,6 +53,8 @@ byte debounceArrayIndex = 0;
 void setup()  
 {
   digitalWrite(SENSOR_ANALOG_PIN_WATER, INPUT_PULLUP); // pullUp
+  analogRead(SENSOR_ANALOG_PIN_WATER); // einmal lesen legt die Refernence Spannung fest - kein springen beim Wandnetzteil
+  // https://www.mikrocontroller.net/topic/413954
   
   // init debouncer array
   for(int i = 0; i < DEBOUNCEARRAY_COUNT; i++) {
@@ -154,7 +156,7 @@ void CheckSensor()
   boolean nextState = triggerState;
   int val = analogRead(SENSOR_ANALOG_PIN_WATER);
   
-  int debounceSum = 0;
+  long debounceSum = 0;
 
   debounceArray[debounceArrayIndex] = val;
   for(int i = 0; i < DEBOUNCEARRAY_COUNT; i++) {
@@ -201,4 +203,3 @@ void CheckSensor()
     }
   }
 }
-
